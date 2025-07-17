@@ -600,26 +600,6 @@ function renderMalla() {
 
 renderMalla();
 
-
-// Agregar botón de reinicio al final de la página
-const botonReset = document.createElement("button");
-botonReset.textContent = "Reiniciar malla";
-botonReset.style.marginTop = "30px";
-botonReset.style.padding = "10px 20px";
-botonReset.style.backgroundColor = "#cc0000";
-botonReset.style.color = "white";
-botonReset.style.border = "none";
-botonReset.style.borderRadius = "6px";
-botonReset.style.cursor = "pointer";
-botonReset.onclick = () => {
-  if (confirm("¿Estás segura de que quieres reiniciar todo?")) {
-    localStorage.removeItem(STORAGE_KEY);
-    location.reload();
-  }
-};
-document.body.appendChild(botonReset);
-
-
 // Mostrar porcentaje de avance
 const porcentajeDiv = document.createElement("div");
 porcentajeDiv.style.marginTop = "20px";
@@ -627,31 +607,6 @@ porcentajeDiv.style.fontSize = "18px";
 porcentajeDiv.style.fontWeight = "bold";
 porcentajeDiv.style.color = "#003366";
 document.body.insertBefore(porcentajeDiv, document.getElementById("malla"));
-
-function actualizarPorcentaje() {
-  let total = 0;
-  let aprobados = 0;
-
-  data.forEach(sem => {
-    sem.ramos.forEach(ramo => {
-      total++;
-      if (estados[ramo.id]) aprobados++;
-    });
-  });
-
-  const porcentaje = total > 0 ? Math.round((aprobados / total) * 100) : 0;
-  porcentajeDiv.textContent = `Avance: ${porcentaje}% (${aprobados} de ${total} ramos)`;
-}
-
-// Llamamos a la función cada vez que renderizamos
-const originalRenderMalla = renderMalla;
-renderMalla = function () {
-  originalRenderMalla();
-  actualizarPorcentaje();
-};
-
-renderMalla();
-
 
 // Crear contenedor de barra de progreso
 const barraContainer = document.createElement("div");
@@ -675,17 +630,19 @@ barraContainer.appendChild(barraProgreso);
 const titulo = document.querySelector("h1");
 titulo.insertAdjacentElement("afterend", barraContainer);
 
-// Agregar mensaje motivacional al final
-const mensaje = document.createElement("p");
-mensaje.textContent = "Eres capaz de todo. Te amo mucho. 💙";
-mensaje.style.marginTop = "40px";
-mensaje.style.fontSize = "20px";
-mensaje.style.color = "#004080";
-mensaje.style.fontWeight = "bold";
-mensaje.style.textAlign = "center";
-document.body.appendChild(mensaje);
+// Agregar mensaje motivacional al final (esperamos a que todo cargue)
+window.addEventListener("DOMContentLoaded", () => {
+  const mensaje = document.createElement("p");
+  mensaje.textContent = "Eres capaz de todo. Te amo mucho. 💙";
+  mensaje.style.marginTop = "40px";
+  mensaje.style.fontSize = "20px";
+  mensaje.style.color = "#004080";
+  mensaje.style.fontWeight = "bold";
+  mensaje.style.textAlign = "center";
+  document.body.appendChild(mensaje);
+});
 
-// Actualizar la barra junto al porcentaje
+// Actualizar barra y porcentaje
 function actualizarPorcentaje() {
   let total = 0;
   let aprobados = 0;
@@ -701,3 +658,30 @@ function actualizarPorcentaje() {
   porcentajeDiv.textContent = `Avance: ${porcentaje}% (${aprobados} de ${total} ramos)`;
   barraProgreso.style.width = porcentaje + "%";
 }
+
+// Reemplazar renderMalla para incluir actualización
+const originalRenderMalla = renderMalla;
+renderMalla = function () {
+  originalRenderMalla();
+  actualizarPorcentaje();
+};
+
+renderMalla();
+
+// Botón de reinicio
+const botonReset = document.createElement("button");
+botonReset.textContent = "Reiniciar malla";
+botonReset.style.marginTop = "30px";
+botonReset.style.padding = "10px 20px";
+botonReset.style.backgroundColor = "#cc0000";
+botonReset.style.color = "white";
+botonReset.style.border = "none";
+botonReset.style.borderRadius = "6px";
+botonReset.style.cursor = "pointer";
+botonReset.onclick = () => {
+  if (confirm("¿Estás segura de que quieres reiniciar todo?")) {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+};
+document.body.appendChild(botonReset);
