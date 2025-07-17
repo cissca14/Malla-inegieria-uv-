@@ -552,7 +552,12 @@ const data = [
   }
 ];
 
-const estados = {}; // Guardará el estado de cada ramo
+const STORAGE_KEY = "estadoMallaUV";
+const estados = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+
+function guardarEstado() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(estados));
+}
 
 function renderMalla() {
   const container = document.getElementById("malla");
@@ -571,8 +576,8 @@ function renderMalla() {
       divRamo.className = "ramo";
       divRamo.textContent = ramo.nombre;
 
-      // Verificar bloqueo
       const bloqueado = ramo.prereqs?.some((req) => !estados[req]);
+
       if (bloqueado) {
         divRamo.classList.add("bloqueado");
       } else if (estados[ramo.id]) {
@@ -582,6 +587,7 @@ function renderMalla() {
       divRamo.onclick = () => {
         if (bloqueado) return;
         estados[ramo.id] = !estados[ramo.id];
+        guardarEstado();
         renderMalla();
       };
 
@@ -593,3 +599,105 @@ function renderMalla() {
 }
 
 renderMalla();
+
+
+// Agregar botón de reinicio al final de la página
+const botonReset = document.createElement("button");
+botonReset.textContent = "Reiniciar malla";
+botonReset.style.marginTop = "30px";
+botonReset.style.padding = "10px 20px";
+botonReset.style.backgroundColor = "#cc0000";
+botonReset.style.color = "white";
+botonReset.style.border = "none";
+botonReset.style.borderRadius = "6px";
+botonReset.style.cursor = "pointer";
+botonReset.onclick = () => {
+  if (confirm("¿Estás segura de que quieres reiniciar todo?")) {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+};
+document.body.appendChild(botonReset);
+
+
+// Mostrar porcentaje de avance
+const porcentajeDiv = document.createElement("div");
+porcentajeDiv.style.marginTop = "20px";
+porcentajeDiv.style.fontSize = "18px";
+porcentajeDiv.style.fontWeight = "bold";
+porcentajeDiv.style.color = "#003366";
+document.body.insertBefore(porcentajeDiv, document.getElementById("malla"));
+
+function actualizarPorcentaje() {
+  let total = 0;
+  let aprobados = 0;
+
+  data.forEach(sem => {
+    sem.ramos.forEach(ramo => {
+      total++;
+      if (estados[ramo.id]) aprobados++;
+    });
+  });
+
+  const porcentaje = total > 0 ? Math.round((aprobados / total) * 100) : 0;
+  porcentajeDiv.textContent = `Avance: ${porcentaje}% (${aprobados} de ${total} ramos)`;
+}
+
+// Llamamos a la función cada vez que renderizamos
+const originalRenderMalla = renderMalla;
+renderMalla = function () {
+  originalRenderMalla();
+  actualizarPorcentaje();
+};
+
+renderMalla();
+
+
+// Crear contenedor de barra de progreso
+const barraContainer = document.createElement("div");
+barraContainer.style.width = "80%";
+barraContainer.style.margin = "10px auto 20px auto";
+barraContainer.style.backgroundColor = "#d0dff2";
+barraContainer.style.borderRadius = "8px";
+barraContainer.style.height = "25px";
+barraContainer.style.overflow = "hidden";
+
+// Crear barra de avance
+const barraProgreso = document.createElement("div");
+barraProgreso.style.height = "100%";
+barraProgreso.style.width = "0%";
+barraProgreso.style.backgroundColor = "#4a90e2";
+barraProgreso.style.transition = "width 0.3s ease";
+barraProgreso.style.borderRadius = "8px";
+barraContainer.appendChild(barraProgreso);
+
+// Insertar debajo del título
+const titulo = document.querySelector("h1");
+titulo.insertAdjacentElement("afterend", barraContainer);
+
+// Agregar mensaje motivacional al final
+const mensaje = document.createElement("p");
+mensaje.textContent = "Eres capaz de todo. Te amo mucho. 💙";
+mensaje.style.marginTop = "40px";
+mensaje.style.fontSize = "20px";
+mensaje.style.color = "#004080";
+mensaje.style.fontWeight = "bold";
+mensaje.style.textAlign = "center";
+document.body.appendChild(mensaje);
+
+// Actualizar la barra junto al porcentaje
+function actualizarPorcentaje() {
+  let total = 0;
+  let aprobados = 0;
+
+  data.forEach(sem => {
+    sem.ramos.forEach(ramo => {
+      total++;
+      if (estados[ramo.id]) aprobados++;
+    });
+  });
+
+  const porcentaje = total > 0 ? Math.round((aprobados / total) * 100) : 0;
+  porcentajeDiv.textContent = `Avance: ${porcentaje}% (${aprobados} de ${total} ramos)`;
+  barraProgreso.style.width = porcentaje + "%";
+}
